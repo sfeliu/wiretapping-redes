@@ -3,6 +3,14 @@ import argparse
 from math import log as LOG
 
 multicast_hexa_bit = ['1', '3', '5', '7', '9', 'b', 'd', 'f']
+type_to_name = {
+    2054: 'ARP',
+    34525: 'IPv6',
+    2048: 'IP',
+    34958: 'EAPOL',
+    35020: 'Raw',
+    35130: 'Raw',
+}
 
 
 def main(filename, s1=True, s2=False):
@@ -61,12 +69,12 @@ def process_packets_to_s2(packets):
     out_file = 's2_' + file_name + '.csv'
     with open(out_file, 'w+') as f:
         for nombre_fuente in ips_dict.keys():
-            f.write('Fuente ' + nombre_fuente)
+            f.write('Fuente ' + nombre_fuente + '\n')
             f.write('simbolo,probabilidad,informacion\n')
             fuente = ips_dict[nombre_fuente][0]
             entropia = ips_dict[nombre_fuente][1]
             cantidad = ips_dict[nombre_fuente][2]
-            for ip_prom_info in fuente[:20]:
+            for ip_prom_info in fuente:
                 ip = ip_prom_info[0]
                 promedio = ip_prom_info[1]
                 informacion = ip_prom_info[2]
@@ -74,6 +82,8 @@ def process_packets_to_s2(packets):
             f.write('\n')
             f.write('entropia,entropia maxima\n')
             f.write(str(entropia) + ',' + str(LOG(cantidad, 2)))
+            f.write('\n')
+            f.write('Cantidad de simbolos: ' + str(len(fuente)))
             f.write('\n')
             f.write('\n')
             f.write('\n')
@@ -88,7 +98,7 @@ def process_packets_to_s1(packets):
 
     for packet in packets:
         try:
-            packet_type = packet.type
+            packet_type = type_to_name[packet.type]
             types.add(packet_type)
             if packet.dst == 'ff:ff:ff:ff:ff:ff':
                 if packet_type not in broadcast_packets_by_type.keys():
@@ -116,13 +126,16 @@ def process_packets_to_s1(packets):
 
     H = 0
     nodes = []
+    all_simbols_count = dict()
     for tipo_de_destino, dict_by_type in all_packets_by_tram.items():
         for protocolo, c in dict_by_type.items():
-            p = c / float(len(packets))
-            i = -LOG(p, 2)
-            H += p * i
-            nodes.append(((tipo_de_destino, protocolo), p, i))
+            all_simbols_count[(tipo_de_destino, protocolo)] = c
+#            p = c / float(len(packets))
+#            i = -LOG(p, 2)
+#            H += p * i
+#            nodes.append(((tipo_de_destino, protocolo), p, i))
 
+    nodes, H, N = calcular_info_promedio_entropia(all_simbols_count)
 
     cant_broadcast = 0
     cant_unicast = 0
@@ -159,7 +172,7 @@ def process_packets_to_s1(packets):
             f.write(node[0][0] + ';' + str(node[0][1]) + ',' + str(node[1]) + ',' + str(node[2]) + '\n')
         f.write('\n')
         f.write('entropia,entropia maxima\n')
-        f.write(str(H) + ',' + str(LOG(len(nodes), 2)))
+        f.write(str(H) + ',' + str(LOG(N, 2)))
 
     print(out_file)
 
