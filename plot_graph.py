@@ -81,12 +81,14 @@ def main(file, mode):
         values = [(max - nodes_weight[node]) / (max - min) for node in G.nodes()]
 
     # nx.draw_networkx_edges(G, pos=pos, edgelist=edges_tuples, style='dashed', alpha=0.1)
-    nx.draw(G, pos=pos, cmap=plt.get_cmap('autumn'), node_color=values, arrowsize=10, width=0.1,
+    nx.draw(G, pos=pos, cmap=plt.get_cmap('autumn'), node_color=values,
+            arrowsize=10, width=0.1,
             with_labels=False)
     labels = {}
     ordered_nodes = sorted(real_nodes_weigth.items(), key=lambda n: n[1])
-    for node in ordered_nodes[:5]:
+    for node in ordered_nodes[:cant_labels]:
         labels[node[0]] = node[0]
+    labels['0.0.0.0'] = '0.0.0.0'
 
     nx.draw_networkx_labels(G, pos, labels)
     plt.show()
@@ -97,7 +99,10 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file_name', default='', help='Nombre del file donde estan guardados los paquetes.'
                                                                  ' Sin extension!!')
     parser.add_argument('-m', '--mode', default='wh', help='Si se quiere modelar el grafo who-has (wh) o el is-at (ia)')
+    parser.add_argument('-l', '--cant_labels', default='5', help='Para decidir cuantos labels usar')
+
     args = parser.parse_args()
+    cant_labels = int(args.cant_labels)
     file_name = args.file_name
     path_to_file = 'packets/'
     file = file_name + '.pcap'
