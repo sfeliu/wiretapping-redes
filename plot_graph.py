@@ -1,5 +1,4 @@
 import csv
-import matplotlib.pyplot as plt
 from scapy.all import *
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -45,7 +44,6 @@ def main(file, mode):
 
     G = nx.DiGraph()
 
-
     edges_tuples = []
     edges_tuples_values = []
 
@@ -83,29 +81,16 @@ def main(file, mode):
         values = [(max - nodes_weight[node]) / (max - min) for node in G.nodes()]
 
     # nx.draw_networkx_edges(G, pos=pos, edgelist=edges_tuples, style='dashed', alpha=0.1)
-    nx.draw(G, pos=pos, cmap=plt.get_cmap('autumn'), node_color=values, arrowstyle='dashed', arrowsize=10, width=0.1,
-            with_labels=True)
+    nx.draw(G, pos=pos, cmap=plt.get_cmap('autumn'), node_color=values, arrowsize=10, width=0.1,
+            with_labels=False)
+    labels = {}
+    ordered_nodes = sorted(real_nodes_weigth.items(), key=lambda n: n[1])
+    for node in ordered_nodes[:5]:
+        labels[node[0]] = node[0]
+
+    nx.draw_networkx_labels(G, pos, labels)
     plt.show()
 
-    # M = G.number_of_edges()
-    # edge_colors = range(2, M + 2)
-    # edge_alphas = [2 + (((value - min)*M) / (max - min)) for value in edges_tuples_values]
-
-    # nodes = nx.draw_networkx_nodes(G, pos, node_color='blue')
-    # edges = nx.draw_networkx_edges(G, pos, arrowstyle='->',
-    #                                arrowsize=10, edge_color=edge_colors,
-    #                                edge_cmap=plt.cm.Blues, width=2)
-    # set alpha value for each edge
-    # for i in range(M):
-    #     edges[i].set_alpha(edge_alphas[i])
-
-    # pc = mpl.collections.PatchCollection(edges, cmap=plt.cm.Blues)
-    # pc.set_array(edge_colors)
-    # plt.colorbar(pc)
-
-    # ax = plt.gca()
-    # ax.set_axis_off()
-    # plt.show()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Para generar el grafo de la fuente s2')
