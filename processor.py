@@ -8,8 +8,8 @@ type_to_name = {
     34525: 'IPv6',
     2048: 'IP',
     34958: 'EAPOL',
-    35020: 'Raw',
-    35130: 'Raw',
+    35020: 'LLDP',
+    35130: 'Raw(Unknown)',
 }
 
 
