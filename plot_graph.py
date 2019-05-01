@@ -7,7 +7,7 @@ import argparse
 from random import randint
 
 
-def main(file, mode):
+def main(file, mode, simplify):
     connections = dict()
     nodes = set()
     nodes_weight = dict()
@@ -45,7 +45,6 @@ def main(file, mode):
     G = nx.DiGraph()
 
     edges_tuples = []
-    edges_tuples_values = []
 
     min = 0
     max = 0
@@ -54,26 +53,39 @@ def main(file, mode):
             # G.add_edge(source, destination)
             edges_tuples.append((source, destination))
             cant = connections[source][destination]
-            edges_tuples_values.append(cant)
             if min > cant:
                 min = cant
             if max < cant:
                 max = cant
     print(min)
     print(max)
-    variant = max - min
     # node_sizes = [3 + 10 * i for i in range(len(G))]
     real_nodes_weigth = dict()
     print(nodes_weight)
+    empty_nodes = []
     for node in nodes_weight.keys():
         print(node + ': ' + str(nodes_weight[node]))
+        if nodes_weight[node] == 0 and simplify:
+            empty_nodes.append(node)
+            continue
         if max == min:
             G.add_node(node, weight=1)
         else:
             real_nodes_weigth[node] = (max - nodes_weight[node]) / (max - min)
             G.add_node(node, weight=real_nodes_weigth[node])
 
-    G.add_edges_from(edges_tuples)
+    falso_node = 'Not-Recognized'
+    if simplify:
+        G.add_node(falso_node, weight=1)
+        nodes_weight[falso_node] = min
+    real_edge_tuples = []
+    for edge_tuple in edges_tuples:
+        temp_edge_tuple = edge_tuple
+        if edge_tuple[1] in empty_nodes:
+            temp_edge_tuple = (temp_edge_tuple[0], falso_node)
+        real_edge_tuples.append(temp_edge_tuple)
+
+    G.add_edges_from(real_edge_tuples)
     pos = nx.spring_layout(G)
     if max == min:
         values = [1 for node in G.nodes()]
@@ -89,6 +101,8 @@ def main(file, mode):
     for node in ordered_nodes[:cant_labels]:
         labels[node[0]] = node[0]
     labels['0.0.0.0'] = '0.0.0.0'
+    if simplify:
+        labels[falso_node] = falso_node
 
     nx.draw_networkx_labels(G, pos, labels)
     plt.show()
@@ -100,10 +114,12 @@ if __name__ == '__main__':
                                                                  ' Sin extension!!')
     parser.add_argument('-m', '--mode', default='wh', help='Si se quiere modelar el grafo who-has (wh) o el is-at (ia)')
     parser.add_argument('-l', '--cant_labels', default='5', help='Para decidir cuantos labels usar')
-
+    parser.add_argument('-s', '--simplify', action='store_true',
+                        help='Unira todos las ips que solo son destinatarios en un solo, llamado Not-Recognized')
+    parser.set_defaults(simplify=False)
     args = parser.parse_args()
     cant_labels = int(args.cant_labels)
     file_name = args.file_name
     path_to_file = 'packets/'
     file = file_name + '.pcap'
-    main(path_to_file + file, args.mode)
+    main(path_to_file + file, args.mode, args.simplify)
